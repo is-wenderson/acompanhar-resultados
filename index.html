@@ -173,7 +173,7 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
         <div class="status-box"><span>Status</span><b class="green" id="statusText">Aguardando sorteio</b></div>
         <div class="status-box"><span>Participantes hoje</span><b id="participantCount">—</b></div>
         <div class="status-box"><span>Resultado</span><b id="winnerText">Ainda não sorteado</b></div>
-        <div class="status-box"><span>Horário</span><b id="drawTime">Ao final do evento</b></div>
+        <div class="status-box"><span>Horário</span><b id="drawTime">Fim do evento</b></div>
       </div>
 
       <div class="wheel-wrap" aria-label="Roleta ilustrativa do sorteio">
@@ -267,6 +267,24 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
     liveNote.textContent = 'Acompanhamento conectado. Os dados são atualizados automaticamente a partir da lista de participantes.';
   }
 
+  function formatarHorarioExibicao(valor) {
+    if (valor === null || valor === undefined) return 'Fim do evento';
+
+    const texto = String(valor).trim();
+    if (!texto) return 'Fim do evento';
+
+    // O Google Sheets pode enviar horários como datas-base de 1899/1900.
+    // Enquanto isso acontecer, mantemos o texto padrão da página.
+    const pareceDataDoSheets =
+      /\b1899\b|\b1900\b|GMT|Horário Padrão|Standard Time/i.test(texto);
+
+    if (pareceDataDoSheets) return 'Fim do evento';
+
+    // Se você preencher manualmente como texto (ex.: 19:00),
+    // a página passa a mostrar exatamente o valor informado.
+    return texto;
+  }
+
   async function carregarStatus() {
     try {
       const separador = STATUS_API_URL.includes('?') ? '&' : '?';
@@ -286,9 +304,7 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
       document.getElementById('statusText').textContent = textoStatus(dados.status);
 
       document.getElementById('drawTime').textContent =
-        dados.horarioSorteio && String(dados.horarioSorteio).trim()
-          ? String(dados.horarioSorteio)
-          : 'Ao final do evento';
+        formatarHorarioExibicao(dados.horarioSorteio);
 
       const winnerText = document.getElementById('winnerText');
       if (dados.resultadoPublicado && dados.vencedor) {
@@ -307,8 +323,18 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
     }
   }
 
-  carregarStatus();
-  setInterval(carregarStatus, INTERVALO_ATUALIZACAO);
+  // Na Prévia do ChatGPT, chamadas externas geram pedidos de permissão.
+  // Por isso, a consulta automática só é ativada quando a página estiver
+  // publicada em um domínio Vercel.
+  const EM_PRODUCAO_VERCEL = window.location.hostname.endsWith('vercel.app');
+
+  if (EM_PRODUCAO_VERCEL) {
+    carregarStatus();
+    setInterval(carregarStatus, INTERVALO_ATUALIZACAO);
+  } else {
+    document.getElementById('liveNote').textContent =
+      'Prévia visual — os dados reais do sorteio serão carregados automaticamente no site publicado.';
+  }
 </script>
 </body>
 </html>
