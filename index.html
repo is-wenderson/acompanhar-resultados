@@ -181,11 +181,11 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
           <div class="pointer"></div>
           <div class="wheel"></div>
           <div class="wheel-lines"></div>
-          <div class="center-badge"><b>Aguardando</b><span>sorteio do dia</span></div>
+          <div class="center-badge"><b id="wheelStatus">Aguardando</b><span id="wheelSub">sorteio do dia</span></div>
         </div>
       </div>
 
-      <div class="live-note">A roleta acima é apenas o acompanhamento visual enquanto o sorteio ainda não foi realizado. Quando houver resultado, esta página poderá exibir o status e o vencedor.</div>
+      <div class="live-note" id="liveNote">Conectando ao acompanhamento do sorteio...</div>
     </div>
   </section>
 
@@ -230,24 +230,85 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
   <footer>Click Digital 2026 • TechComp<br>A página de acompanhamento não realiza o sorteio.</footer>
 </main>
 <script>
-  // Futuro endpoint público de status do sorteio.
-  // Quando o Apps Script de acompanhamento estiver pronto, cole a URL /exec aqui.
-  const STATUS_API_URL = "";
+  const STATUS_API_URL = "https://script.google.com/macros/s/AKfycbwCncv70jWxZPES76uBTgMOJxuYTEMsavzJSi-tAa-7nR358WdXAjw1PsRdyzsjK9hyzA/exec";
+  const INTERVALO_ATUALIZACAO = 6000000;
+
+  function textoStatus(status) {
+    const s = String(status || '').toUpperCase();
+    if (s === 'REALIZADO') return 'Sorteio realizado';
+    if (s === 'EM_ANDAMENTO') return 'Sorteio em andamento';
+    return 'Aguardando sorteio';
+  }
+
+  function atualizarRoleta(dados) {
+    const status = String(dados.status || 'AGUARDANDO').toUpperCase();
+    const wheelStatus = document.getElementById('wheelStatus');
+    const wheelSub = document.getElementById('wheelSub');
+    const liveNote = document.getElementById('liveNote');
+
+    if (status === 'REALIZADO' && dados.resultadoPublicado) {
+      wheelStatus.textContent = 'Resultado';
+      wheelSub.textContent = dados.vencedor || 'publicado';
+      liveNote.textContent = dados.empresaVencedor
+        ? `Sorteio realizado. ${dados.vencedor} — ${dados.empresaVencedor}.`
+        : `Sorteio realizado. Vencedor: ${dados.vencedor || 'resultado publicado'}.`;
+      return;
+    }
+
+    if (status === 'EM_ANDAMENTO') {
+      wheelStatus.textContent = 'Ao vivo';
+      wheelSub.textContent = 'sorteio em andamento';
+      liveNote.textContent = 'O sorteio está em andamento. Esta página será atualizada automaticamente.';
+      return;
+    }
+
+    wheelStatus.textContent = 'Aguardando';
+    wheelSub.textContent = 'sorteio do dia';
+    liveNote.textContent = 'Acompanhamento conectado. Os dados são atualizados automaticamente a partir da lista de participantes.';
+  }
 
   async function carregarStatus() {
-    if (!STATUS_API_URL) return;
     try {
-      const resposta = await fetch(STATUS_API_URL + '?acao=status', { cache: 'no-store' });
+      const separador = STATUS_API_URL.includes('?') ? '&' : '?';
+      const url = STATUS_API_URL + separador + 'action=status&_=' + Date.now();
+
+      const resposta = await fetch(url, { cache: 'no-store' });
+      if (!resposta.ok) throw new Error('HTTP ' + resposta.status);
+
       const dados = await resposta.json();
-      if (typeof dados.total_participantes !== 'undefined') document.getElementById('participantCount').textContent = dados.total_participantes;
-      if (dados.status) document.getElementById('statusText').textContent = dados.status;
-      if (dados.horario) document.getElementById('drawTime').textContent = dados.horario;
-      if (dados.vencedor) document.getElementById('winnerText').textContent = dados.vencedor;
+      if (!dados || dados.ok !== true) throw new Error('Resposta inválida do servidor.');
+
+      document.getElementById('participantCount').textContent =
+        Number.isFinite(Number(dados.participantesHoje))
+          ? String(Number(dados.participantesHoje))
+          : '0';
+
+      document.getElementById('statusText').textContent = textoStatus(dados.status);
+
+      document.getElementById('drawTime').textContent =
+        dados.horarioSorteio && String(dados.horarioSorteio).trim()
+          ? String(dados.horarioSorteio)
+          : 'Ao final do evento';
+
+      const winnerText = document.getElementById('winnerText');
+      if (dados.resultadoPublicado && dados.vencedor) {
+        winnerText.textContent = dados.empresaVencedor
+          ? dados.vencedor + ' — ' + dados.empresaVencedor
+          : dados.vencedor;
+      } else {
+        winnerText.textContent = 'Ainda não sorteado';
+      }
+
+      atualizarRoleta(dados);
     } catch (e) {
       console.warn('Não foi possível atualizar o status do sorteio.', e);
+      document.getElementById('liveNote').textContent =
+        'Não foi possível atualizar o acompanhamento agora. A página tentará novamente automaticamente.';
     }
   }
+
   carregarStatus();
+  setInterval(carregarStatus, INTERVALO_ATUALIZACAO);
 </script>
 </body>
 </html>
