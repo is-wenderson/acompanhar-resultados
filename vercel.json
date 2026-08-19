@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/sorteio",
-      "destination": "https://script.google.com/macros/s/AKfycbwHTOpn-oRZC9s7BAiNZde0a7TsqjTzZpdING2B877PRUKImhw3Nl8PMeBmoj1j3XX4YQ/exec"
+      "destination": "https://script.google.com/macros/s/AKfycbw93xpXVLJaRhdqYeB78ssVkA6lXPJ537xV7Om6bIDkom_h7diJQmZGGv679kXnqUh6ng/exec"
     }
   ],
   "headers": [
