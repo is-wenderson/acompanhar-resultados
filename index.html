@@ -82,6 +82,9 @@ h1{
 .status-box span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:700}
 .status-box b{display:block;margin-top:5px;font-family:'Montserrat',sans-serif;font-size:16px;color:#fff}
 .status-box b.green{color:#BCEAB4}
+.winner-instagram-box{display:none;grid-column:1/-1}
+.winner-instagram-box.show{display:block}
+.winner-instagram-box b{color:#BCEAB4}
 .wheel-wrap{display:flex;justify-content:center;align-items:center;padding:10px 0 4px}
 .wheel-stage{position:relative;width:min(82vw,360px);aspect-ratio:1}
 .pointer{
@@ -171,9 +174,13 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
     <div class="status-card">
       <div class="status-grid">
         <div class="status-box"><span>Status</span><b class="green" id="statusText">Aguardando sorteio</b></div>
-        <div class="status-box"><span>Participantes hoje</span><b id="participantCount">—</b></div>
+        <div class="status-box"><span>Participantes no sorteio</span><b id="participantCount">—</b></div>
         <div class="status-box"><span>Resultado</span><b id="winnerText">Ainda não sorteado</b></div>
         <div class="status-box"><span>Horário</span><b id="drawTime">Fim do evento</b></div>
+        <div class="status-box winner-instagram-box" id="winnerInstagramBox">
+          <span>Instagram do ganhador</span>
+          <b id="winnerInstagram">—</b>
+        </div>
       </div>
 
       <div class="wheel-wrap" aria-label="Roleta ilustrativa do sorteio">
@@ -307,12 +314,24 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
         formatarHorarioExibicao(dados.horarioSorteio);
 
       const winnerText = document.getElementById('winnerText');
+      const winnerInstagramBox = document.getElementById('winnerInstagramBox');
+      const winnerInstagram = document.getElementById('winnerInstagram');
+
       if (dados.resultadoPublicado && dados.vencedor) {
         winnerText.textContent = dados.empresaVencedor
           ? dados.vencedor + ' — ' + dados.empresaVencedor
           : dados.vencedor;
+
+        const instagram = String(dados.instagramVencedor || '').trim();
+        if (instagram) {
+          winnerInstagram.textContent = instagram.startsWith('@') ? instagram : '@' + instagram;
+          winnerInstagramBox.classList.add('show');
+        } else {
+          winnerInstagramBox.classList.remove('show');
+        }
       } else {
         winnerText.textContent = 'Ainda não sorteado';
+        winnerInstagramBox.classList.remove('show');
       }
 
       atualizarRoleta(dados);
