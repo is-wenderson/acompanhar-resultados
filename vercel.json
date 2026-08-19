@@ -1,0 +1,27 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/sorteio",
+      "destination": "https://script.google.com/macros/s/AKfycbzX5QbEln2vW6spUVe-Xg3h1zGnES-_eSeeiybbyHgcczJxACozmeo2JaDNNfjAc6mrnw/exec"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ]
+}
