@@ -238,11 +238,13 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
 </main>
 <script>
   const STATUS_API_URL = "/api/sorteio";
+  console.info("TechComp acompanhamento: integração v13");
   const INTERVALO_ATUALIZACAO = 30000;
 
   function textoStatus(status) {
     const s = String(status || '').toUpperCase();
     if (s === 'REALIZADO') return 'Sorteio realizado';
+    if (s === 'VALIDANDO') return 'Validando ganhador';
     if (s === 'EM_ANDAMENTO') return 'Sorteio em andamento';
     return 'Aguardando sorteio';
   }
@@ -259,6 +261,14 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
       liveNote.textContent = dados.empresaVencedor
         ? `Sorteio realizado. ${dados.vencedor} — ${dados.empresaVencedor}.`
         : `Sorteio realizado. Vencedor: ${dados.vencedor || 'resultado publicado'}.`;
+      return;
+    }
+
+    if (status === 'VALIDANDO') {
+      wheelStatus.textContent = 'Validação';
+      wheelSub.textContent = 'conferindo requisitos';
+      liveNote.textContent =
+        'Um participante foi pré-selecionado. O resultado será publicado após a validação dos requisitos do sorteio.';
       return;
     }
 
