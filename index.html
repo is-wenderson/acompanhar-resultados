@@ -237,7 +237,7 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
   <footer>Click Digital 2026 • TechComp<br>A página de acompanhamento não realiza o sorteio.</footer>
 </main>
 <script>
-  const STATUS_API_URL = "https://script.google.com/macros/s/AKfycbzX5QbEln2vW6spUVe-Xg3h1zGnES-_eSeeiybbyHgcczJxACozmeo2JaDNNfjAc6mrnw/exec";
+  const STATUS_API_URL = "/api/sorteio";
   const INTERVALO_ATUALIZACAO = 30000;
 
   function textoStatus(status) {
@@ -303,10 +303,12 @@ footer{text-align:center;color:#898AA8;font-size:11.5px;line-height:1.5;margin-t
       const dados = await resposta.json();
       if (!dados || dados.ok !== true) throw new Error('Resposta inválida do servidor.');
 
+      const totalParticipantes = Number.isFinite(Number(dados.participantesHoje))
+        ? Number(dados.participantesHoje)
+        : 0;
+
       document.getElementById('participantCount').textContent =
-        Number.isFinite(Number(dados.participantesHoje))
-          ? String(Number(dados.participantesHoje))
-          : '0';
+        String(totalParticipantes);
 
       document.getElementById('statusText').textContent = textoStatus(dados.status);
 
